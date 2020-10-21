@@ -15,7 +15,8 @@ class MuZeroConfig:
         self.max_num_gpus = None  # Fix the maximum number of GPUs to use. It's usually faster to use a single GPU (set it to 1) if it has enough memory. None will use every GPUs available
 
         ### Game
-        self.observation_shape = (8, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
+#        self.observation_shape = (8, 5, 5)
+        self.observation_shape = (10, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         self.action_space = list(range(1250))  # Fixed list of all possible actions. You should only edit the length
         self.players = list(range(2))  # List of players. You should only edit the length
         self.stacked_observations = 0  # Number of previous observations and previous actions to add to the current observation
@@ -79,12 +80,12 @@ class MuZeroConfig:
         self.momentum = 0.9  # Used only if optimizer is SGD
 
         # Exponential learning rate schedule
-        self.lr_init = 0.001  # Initial learning rate
+        self.lr_init = 0.002  # Initial learning rate
         self.lr_decay_rate = 0.9  # Set it to 1 to use a constant learning rate
         self.lr_decay_steps = 10000
 
         ### Replay Buffer
-        self.replay_buffer_size = 100  # Number of self-play games to keep in the replay buffer
+        self.replay_buffer_size = 1000  # Number of self-play games to keep in the replay buffer
         self.num_unroll_steps = 42  # Number of game moves to keep for every batch element
         self.td_steps = 42  # Number of steps in the future to take into account for calculating the target value
         self.PER = True  # Prioritized Replay (See paper appendix Training), select in priority the elements in the replay buffer which are unexpected for the network
@@ -307,17 +308,33 @@ class Onitama:
         return self.get_observation(), reward, done
 
     def get_observation(self):
-        board_player1 = numpy.where(self.board > 0, 1.0, 0.0)
-        board_player2 = numpy.where(self.board < 0, 1.0, 0.0)
-        for i in range(self.board_size):
-            for j in range(self.board_size):
-                if self.board[i][j] == 2:
-                    board_player1[i][j] = 2.0
-                elif self.board[i][j] == -2:
-                    board_player2[i][j] = -2.0
+#        board_player1 = numpy.where(self.board > 0, 1.0, 0.0)
+#        board_player2 = numpy.where(self.board < 0, 1.0, 0.0)
+#        for i in range(self.board_size):
+#            for j in range(self.board_size):
+#                if self.board[i][j] == 2:
+#                    board_player1[i][j] = 2.0
+#                elif self.board[i][j] == -2:
+#                    board_player2[i][j] = -2.0
+#        board_to_play = numpy.full((5, 5), self.player, dtype="int32")
+#        cards = [self.p1Card1, self.p1Card2, self.midCard, self.p2Card1, self.p2Card2]
+#        to_return = [board_player1, board_player2, board_to_play]
+#        for card in cards:
+#            board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+#            for delta in card.deltas:
+#                board[2+delta[0]][2+delta[1]] = 1
+#            new_card = numpy.where(board > 0, 1.0, 0.0)
+#            to_return.append(new_card)
+#        return numpy.array(to_return)
+
+        board_player1 = numpy.where(self.board == 1, 1.0, 0.0)
+        board_player2 = numpy.where(self.board == -1, 1.0, 0.0)
+        king_player1 = numpy.where(self.board == 2, 1.0, 0.0)
+        king_player2 = numpy.where(self.board == -2, 1.0, 0.0)
         board_to_play = numpy.full((5, 5), self.player, dtype="int32")
-        cards = [self.p1Card1, self.p1Card2, self.midCard, self.p2Card1, self.p2Card2]
-        to_return = [board_player1, board_player2, board_to_play]
+        cards = [self.p1Card1, self.p1Card2, self.p2Card1, self.p2Card2,  self.midCard]
+        
+        to_return = [board_player1, board_player2, king_player1, king_player2, board_to_play]
         for card in cards:
             board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
             for delta in card.deltas:
