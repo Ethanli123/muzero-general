@@ -308,25 +308,6 @@ class Onitama:
         return self.get_observation(), reward, done
 
     def get_observation(self):
-#        board_player1 = numpy.where(self.board > 0, 1.0, 0.0)
-#        board_player2 = numpy.where(self.board < 0, 1.0, 0.0)
-#        for i in range(self.board_size):
-#            for j in range(self.board_size):
-#                if self.board[i][j] == 2:
-#                    board_player1[i][j] = 2.0
-#                elif self.board[i][j] == -2:
-#                    board_player2[i][j] = -2.0
-#        board_to_play = numpy.full((5, 5), self.player, dtype="int32")
-#        cards = [self.p1Card1, self.p1Card2, self.midCard, self.p2Card1, self.p2Card2]
-#        to_return = [board_player1, board_player2, board_to_play]
-#        for card in cards:
-#            board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
-#            for delta in card.deltas:
-#                board[2+delta[0]][2+delta[1]] = 1
-#            new_card = numpy.where(board > 0, 1.0, 0.0)
-#            to_return.append(new_card)
-#        return numpy.array(to_return)
-
         board_player1 = numpy.where(self.board == 1, 1.0, 0.0)
         board_player2 = numpy.where(self.board == -1, 1.0, 0.0)
         king_player1 = numpy.where(self.board == 2, 1.0, 0.0)
@@ -441,7 +422,7 @@ class Onitama:
             des_x = ord(destination[0]) - 65
             des_y = ord(destination[1]) - 65
             for delta in impactCard.deltas:
-                if des_x == x - delta[0] and des_y == y - delta[1]:
+                if des_x == x - delta[0] and des_y == y - delta[1] and self.board[des_x][des_y] >= 0:
                     valid_destination = True
 
         print("Made Action:", (x, y), (des_x, des_y), ord(human_input) - ord("0"))
