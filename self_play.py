@@ -124,6 +124,7 @@ class SelfPlay:
 
         if render:
             self.game.render()
+            self.game.accept_render()
 
         with torch.no_grad():
             while (
@@ -172,6 +173,7 @@ class SelfPlay:
                 if render:
                     print(f"Played action: {self.game.action_to_string(action)}")
                     self.game.render()
+                    self.game.accept_render()
 
                 game_history.store_search_statistics(root, self.config.action_space)
 
@@ -181,6 +183,11 @@ class SelfPlay:
                 game_history.reward_history.append(reward)
                 game_history.to_play_history.append(self.game.to_play())
 
+                if len(game_history.action_history) > self.config.max_moves:
+                    print("Max moves exceeded")
+                elif done:
+                    print("Game finished. Player", self.game.to_play(), "lost.")
+                    self.game.render()
         return game_history
 
     def close_game(self):

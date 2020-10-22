@@ -28,7 +28,7 @@ class MuZeroConfig:
         ### Self-Play
         self.num_workers = 2  # Number of simultaneous threads/workers self-playing to feed the replay buffer
         self.selfplay_on_gpu = False
-        self.max_moves = 100  # Maximum number of moves if game is not finished before
+        self.max_moves = 2000  # Maximum number of moves if game is not finished before
         self.num_simulations = 200  # Number of future moves self-simulated
         self.discount = 1  # Chronological discount of the reward
         self.temperature_threshold = None  # Number of moves before dropping the temperature given by visit_softmax_temperature_fn to 0 (ie selecting the best action). If None, visit_softmax_temperature_fn is used every time
@@ -47,8 +47,8 @@ class MuZeroConfig:
         
         # Residual Network
         self.downsample = False  # Downsample observations before representation network, False / "CNN" (lighter) / "resnet" (See paper appendix Network Architecture)
-        self.blocks = 3  # Number of blocks in the ResNet
-        self.channels = 64  # Number of channels in the ResNet
+        self.blocks = 6  # Number of blocks in the ResNet
+        self.channels = 128  # Number of channels in the ResNet
         self.reduced_channels_reward = 2  # Number of channels in reward head
         self.reduced_channels_value = 2  # Number of channels in value head
         self.reduced_channels_policy = 4  # Number of channels in policy head
@@ -58,11 +58,11 @@ class MuZeroConfig:
         
         # Fully Connected Network
         self.encoding_size = 32
-        self.fc_representation_layers = []  # Define the hidden layers in the representation network
+        self.fc_representation_layers = [64]  # Define the hidden layers in the representation network
         self.fc_dynamics_layers = [64]  # Define the hidden layers in the dynamics network
         self.fc_reward_layers = [64]  # Define the hidden layers in the reward network
-        self.fc_value_layers = []  # Define the hidden layers in the value network
-        self.fc_policy_layers = []  # Define the hidden layers in the policy network
+        self.fc_value_layers = [64]  # Define the hidden layers in the value network
+        self.fc_policy_layers = [64]  # Define the hidden layers in the policy network
 
 
 
@@ -105,11 +105,15 @@ class MuZeroConfig:
         """
         Parameter to alter the visit count distribution to ensure that the action selection becomes greedier as training progresses.
         The smaller it is, the more likely the best action (ie with the highest visit count) is chosen.
-
         Returns:
             Positive float.
         """
-        return 1
+        if trained_steps < 0.5 * self.training_steps:
+            return 1.0
+        elif trained_steps < 0.75 * self.training_steps:
+            return 0.5
+        else:
+            return 0.25
 
 class Game(AbstractGame):
     """
@@ -168,6 +172,8 @@ class Game(AbstractGame):
         Display the game observation.
         """
         self.env.render()
+    
+    def accept_render(self):
         input("Press enter to take a step ")
 
     def human_to_action(self):
