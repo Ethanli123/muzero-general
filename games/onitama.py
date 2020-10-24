@@ -16,7 +16,7 @@ class MuZeroConfig:
 
         ### Game
 #        self.observation_shape = (8, 5, 5)
-        self.observation_shape = (10, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
+        self.observation_shape = (9, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         self.action_space = list(range(1250))  # Fixed list of all possible actions. You should only edit the length
         self.players = list(range(2))  # List of players. You should only edit the length
         self.stacked_observations = 0  # Number of previous observations and previous actions to add to the current observation
@@ -319,15 +319,46 @@ class Onitama:
         king_player1 = numpy.where(self.board == 2, 1.0, 0.0)
         king_player2 = numpy.where(self.board == -2, 1.0, 0.0)
         board_to_play = numpy.full((5, 5), self.player, dtype="int32")
-        cards = [self.p1Card1, self.p1Card2, self.p2Card1, self.p2Card2,  self.midCard]
         
-        to_return = [board_player1, board_player2, king_player1, king_player2, board_to_play]
-        for card in cards:
-            board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
-            for delta in card.deltas:
-                board[2+delta[0]][2+delta[1]] = 1
-            new_card = numpy.where(board > 0, 1.0, 0.0)
-            to_return.append(new_card)
+        threat_board1 = numpy.zeros((5, 5), dtype="float")
+        threat_next1 = numpy.zeros((5, 5), dtype="float")
+        threat_board2 = numpy.zeros((5, 5), dtype="float")
+        threat_next2 = numpy.zeros((5, 5), dtype="float")
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                if self.board[i][j] > 0:
+                    for move in self.p1Card1.deltas:
+                        finalposition = (i + move[0], j + move[1])
+                        if 0 <= finalposition[0] < 5 and 0 <= finalposition[1] < 5:
+                            threat_board1[finalposition[0]][finalposition[1]] += 1
+                    for move in self.p1Card2.deltas:
+                        finalposition = (i + move[0], j + move[1])
+                        if 0 <= finalposition[0] < 5 and 0 <= finalposition[1] < 5:
+                            threat_board1[finalposition[0]][finalposition[1]] += 1
+                    for move in self.midCard.deltas:
+                        finalposition = (i + move[0], j + move[1])
+                        if 0 <= finalposition[0] < 5 and 0 <= finalposition[1] < 5:
+                            threat_next1[finalposition[0]][finalposition[1]] += 1
+                if self.board[i][j] < 0:
+                    for move in self.p2Card1.deltas:
+                        finalposition = (i - move[0], j - move[1])
+                        if 0 <= finalposition[0] < 5 and 0 <= finalposition[1] < 5:
+                            threat_board2[finalposition[0]][finalposition[1]] += 1
+                    for move in self.p2Card2.deltas:
+                        finalposition = (i - move[0], j - move[1])
+                        if 0 <= finalposition[0] < 5 and 0 <= finalposition[1] < 5:
+                            threat_board2[finalposition[0]][finalposition[1]] += 1
+                    for move in self.midCard.deltas:
+                        finalposition = (i - move[0], j - move[1])
+                        if 0 <= finalposition[0] < 5 and 0 <= finalposition[1] < 5:
+                            threat_next2[finalposition[0]][finalposition[1]] += 1
+        # print("Threat board 1:")
+        # print("Cards:", self.p1Card1.name, self.p1Card2.name)
+        # print(threat_board1)
+        # print("Threat board 2:")
+        # print("Cards:", self.p2Card1.name, self.p2Card2.name)
+        # print(threat_board2)
+        to_return = [board_player1, board_player2, king_player1, king_player2, board_to_play, threat_board1, threat_next1, threat_board1, threat_board2]
         return numpy.array(to_return)
 
     def legal_actions(self):
