@@ -415,6 +415,9 @@ class Onitama:
         printTwoCards(self.p1Card1, self.p1Card2)
         print()
         print("Middle Card:", self.midCard.name)
+        array = [["."]*5 for _ in range(5)]
+        for delta in self.midCard.deltas:
+            array[2+delta[0]][2+delta[1]] = "X"
         marker = "  "
         for i in range(self.board_size):
             marker = marker + self.board_markers[i] + " "
@@ -433,7 +436,9 @@ class Onitama:
                     print("b", end=" ")
                 elif ch == -2:
                     print("B", end=" ")
-
+            
+            for col in range(self.board_size):
+                
             print()
         printTwoCards(self.p2Card1, self.p2Card2, True)
 
