@@ -27,7 +27,7 @@ class MuZeroConfig:
         
         ### Self-Play
         self.num_workers = 2  # Number of simultaneous threads/workers self-playing to feed the replay buffer
-        self.selfplay_on_gpu = True if torch.cuda.is_available() else False
+        self.selfplay_on_gpu = False #True if torch.cuda.is_available() else False
         self.max_moves = 1000  # Maximum number of moves if game is not finished before
         self.num_simulations = 200  # Number of future moves self-simulated
         self.discount = 1  # Chronological discount of the reward
@@ -416,6 +416,7 @@ class Onitama:
         print()
         print("Middle Card:", self.midCard.name)
         array = [["."]*5 for _ in range(5)]
+        array[2][2] = 'O'
         for delta in self.midCard.deltas:
             array[2+delta[0]][2+delta[1]] = "X"
         marker = "  "
@@ -436,10 +437,15 @@ class Onitama:
                     print("b", end=" ")
                 elif ch == -2:
                     print("B", end=" ")
-            
-            for col in range(self.board_size):
-                
+            print(end = " ")
+            if self.player == -1:
+                for col in range(self.board_size):
+                    print(array[5-i-1][5-col-1], end=" ")
+            else:
+                for col in range(self.board_size):
+                    print(array[i][col], end=" ")
             print()
+                  
         printTwoCards(self.p2Card1, self.p2Card2, True)
 
     def human_input_to_action(self):
