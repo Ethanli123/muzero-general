@@ -3,9 +3,9 @@ import os
 
 import numpy
 import torch
+from .onitama_ai import Game as WilliamGame, OnitamaAI, Point
 
 from .abstract_game import AbstractGame
-
 
 class MuZeroConfig:
     def __init__(self):
@@ -23,7 +23,7 @@ class MuZeroConfig:
 
         # Evaluate
         self.muzero_player = 0  # Turn Muzero begins to play (0: MuZero plays first, 1: MuZero plays second)
-        self.opponent = "random"  # Hard coded agent that MuZero faces to assess his progress in multiplayer games. It doesn't influence training. None, "random" or "expert" if implemented in the Game class
+        self.opponent = "expert"  # Hard coded agent that MuZero faces to assess his progress in multiplayer games. It doesn't influence training. None, "random" or "expert" if implemented in the Game class
         
         ### Self-Play
         self.num_workers = 2  # Number of simultaneous threads/workers self-playing to feed the replay buffer
@@ -262,6 +262,11 @@ class Onitama:
 
         self.player = self.midCard.colour
 
+        self.minimax_ai = OnitamaAI(
+            self.generate_william_game(),
+            1
+        )
+
     def to_play(self):
         return 0 if self.player == 1 else 1
 
@@ -493,6 +498,26 @@ class Onitama:
 
     def action_to_human_input(self, action):
         return decode_action(action)
+
+    def generate_william_game(self):
+        will_board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                will_board[i][j] = - self.board[i][j]
+        return WilliamGame(
+            red_cards = [self.p1Card1.name.lower(), self.p1Card2.name.lower()],
+            blue_cards = [self.p2Card1.name.lower(), self.p2Card2.name.lower()],
+            neutral_card = self.midCard.name.lower(),
+            board = will_board,
+            starting_player = -self.player
+        )
+    def expert_action(self):
+        ai_move = self.minimax_ai.decide_move()
+        blue_cards = [self.p2Card1.name.lower(), self.p2Card2.name.lower()]
+        
+        card = blue_cards.index(ai_move.card)
+        print((ai_move.start.y, ai_move.start.x), (ai_move.end.y, ai_move.end.x), ai_move.card)
+        return encode_action((ai_move.start.y, ai_move.start.x), (ai_move.end.y, ai_move.end.x), card)
 
 def printTwoCards(card1, card2, reverse = False):
     print(card1.name, card2.name)
