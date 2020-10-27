@@ -440,10 +440,10 @@ class Onitama:
             print(end = " ")
             if self.player == -1:
                 for col in range(self.board_size):
-                    print(array[5-i-1][5-col-1], end=" ")
+                    print(array[5-row-1][5-col-1], end=" ")
             else:
                 for col in range(self.board_size):
-                    print(array[i][col], end=" ")
+                    print(array[row][col], end=" ")
             print()
                   
         printTwoCards(self.p2Card1, self.p2Card2, True)
