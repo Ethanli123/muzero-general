@@ -512,6 +512,7 @@ class Onitama:
             starting_player = -self.player
         )
     def expert_action(self):
+        self.minimax_ai.game = self.generate_william_game()
         ai_move = self.minimax_ai.decide_move()
         blue_cards = [self.p2Card1.name.lower(), self.p2Card2.name.lower()]
         
