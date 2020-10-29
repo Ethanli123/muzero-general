@@ -26,7 +26,7 @@ class MuZeroConfig:
         self.opponent = "expert"  # Hard coded agent that MuZero faces to assess his progress in multiplayer games. It doesn't influence training. None, "random" or "expert" if implemented in the Game class
         
         ### Self-Play
-        self.num_workers = 2  # Number of simultaneous threads/workers self-playing to feed the replay buffer
+        self.num_workers = 4  # Number of simultaneous threads/workers self-playing to feed the replay buffer
         self.selfplay_on_gpu = False #True if torch.cuda.is_available() else False
         self.max_moves = 1000  # Maximum number of moves if game is not finished before
         self.num_simulations = 200  # Number of future moves self-simulated
