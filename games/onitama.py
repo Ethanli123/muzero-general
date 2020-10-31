@@ -19,7 +19,7 @@ class MuZeroConfig:
         self.observation_shape = (9, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         self.action_space = list(range(1250))  # Fixed list of all possible actions. You should only edit the length
         self.players = list(range(2))  # List of players. You should only edit the length
-        self.stacked_observations = 0  # Number of previous observations and previous actions to add to the current observation
+        self.stacked_observations = 8  # Number of previous observations and previous actions to add to the current observation
 
         # Evaluate
         self.muzero_player = 0  # Turn Muzero begins to play (0: MuZero plays first, 1: MuZero plays second)
@@ -80,16 +80,16 @@ class MuZeroConfig:
         self.momentum = 0.9  # Used only if optimizer is SGD
 
         # Exponential learning rate schedule
-        self.lr_init = 0.002  # Initial learning rate
+        self.lr_init = 0.003  # Initial learning rate
         self.lr_decay_rate = 0.9  # Set it to 1 to use a constant learning rate
         self.lr_decay_steps = 100000
 
         ### Replay Buffer
         self.replay_buffer_size = 1000  # Number of self-play games to keep in the replay buffer
-        self.num_unroll_steps = 42  # Number of game moves to keep for every batch element
-        self.td_steps = 42  # Number of steps in the future to take into account for calculating the target value
+        self.num_unroll_steps = 5  # Number of game moves to keep for every batch element
+        self.td_steps = 5  # Number of steps in the future to take into account for calculating the target value
         self.PER = True  # Prioritized Replay (See paper appendix Training), select in priority the elements in the replay buffer which are unexpected for the network
-        self.PER_alpha = 0.5  # How much prioritization is used, 0 corresponding to the uniform case, paper suggests 1
+        self.PER_alpha = 1  # How much prioritization is used, 0 corresponding to the uniform case, paper suggests 1
 
         # Reanalyze (See paper appendix Reanalyse)
         self.use_last_model_value = True  # Use the last model to provide a fresher, stable n-step value (See paper appendix Reanalyze)
