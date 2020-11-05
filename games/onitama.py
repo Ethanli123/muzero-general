@@ -3,9 +3,9 @@ import os
 
 import numpy
 import torch
+from .onitama_ai import Game as WilliamGame, OnitamaAI, Point
 
 from .abstract_game import AbstractGame
-
 
 class MuZeroConfig:
     def __init__(self):
@@ -23,7 +23,7 @@ class MuZeroConfig:
 
         # Evaluate
         self.muzero_player = 0  # Turn Muzero begins to play (0: MuZero plays first, 1: MuZero plays second)
-        self.opponent = "random"  # Hard coded agent that MuZero faces to assess his progress in multiplayer games. It doesn't influence training. None, "random" or "expert" if implemented in the Game class
+        self.opponent = "expert"  # Hard coded agent that MuZero faces to assess his progress in multiplayer games. It doesn't influence training. None, "random" or "expert" if implemented in the Game class
         
         ### Self-Play
         self.num_workers = 2  # Number of simultaneous threads/workers self-playing to feed the replay buffer
@@ -262,6 +262,11 @@ class Onitama:
 
         self.player = self.midCard.colour
 
+        self.minimax_ai = OnitamaAI(
+            self.generate_william_game(),
+            1
+        )
+
     def to_play(self):
         return 0 if self.player == 1 else 1
 
@@ -314,20 +319,80 @@ class Onitama:
         return self.get_observation(), reward, done
 
     def get_observation(self):
-        board_player1 = numpy.where(self.board == 1, 1.0, 0.0)
-        board_player2 = numpy.where(self.board == -1, 1.0, 0.0)
-        king_player1 = numpy.where(self.board == 2, 1.0, 0.0)
-        king_player2 = numpy.where(self.board == -2, 1.0, 0.0)
         board_to_play = numpy.full((5, 5), self.player, dtype="int32")
-        cards = [self.p1Card1, self.p1Card2, self.p2Card1, self.p2Card2,  self.midCard]
-        
-        to_return = [board_player1, board_player2, king_player1, king_player2, board_to_play]
-        for card in cards:
-            board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
-            for delta in card.deltas:
-                board[2+delta[0]][2+delta[1]] = 1
-            new_card = numpy.where(board > 0, 1.0, 0.0)
-            to_return.append(new_card)
+        card1 = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+        card2 = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+        card_midcard = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+        card_op1 = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+        card_op2 = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+
+        if self.player == 1:
+            board_player1 = numpy.where(self.board == 1, 1.0, 0.0)
+            board_player2 = numpy.where(self.board == -1, 1.0, 0.0)
+            king_player1 = numpy.where(self.board == 2, 1.0, 0.0)
+            king_player2 = numpy.where(self.board == -2, 1.0, 0.0)
+            
+            to_return = [board_player1, board_player2, king_player1, king_player2]
+
+            for delta in self.p1Card1.deltas:
+                card1[2+delta[0]][2+delta[1]] = 1.0
+            to_return.append(card1)
+            for delta in self.p1Card2.deltas:
+                card2[2+delta[0]][2+delta[1]] = 1
+            to_return.append(card2)
+
+            for delta in self.p2Card1.deltas:
+                card_op1[2-delta[0]][2-delta[1]] = 1
+            to_return.append(card_op1)
+            for delta in self.p2Card2.deltas:
+                card_op2[2-delta[0]][2-delta[1]] = 1
+            to_return.append(card_op2)
+
+            for delta in self.midCard.deltas:
+                card_midcard[2+delta[0]][2+delta[1]] = 1
+            to_return.append(card_midcard) 
+        else:
+            # Player is -1, flip the board
+            board_player1 = numpy.zeros((self.board_size, self.board_size), dtype="float")
+            board_player2 = numpy.zeros((self.board_size, self.board_size), dtype="float")
+            king_player1 = numpy.zeros((self.board_size, self.board_size), dtype="float")
+            king_player2 = numpy.zeros((self.board_size, self.board_size), dtype="float")
+            for i in range(self.board_size):
+                for j in range(self.board_size):
+                    if self.board[i][j] == -1:
+                        board_player1[4-i][4-j] = 1.0
+                    elif self.board[i][j] == 1:
+                        board_player2[4-i][4-j] = 1.0
+                    elif self.board[i][j] == -2:
+                        king_player1[4-i][4-j] = 1.0
+                    elif self.board[i][j] == 2:
+                        king_player2[4-i][4-j] = 1.0
+                        
+            to_return = [board_player1, board_player2, king_player1, king_player2]
+
+            for delta in self.p2Card1.deltas:
+                card1[2+delta[0]][2+delta[1]] = 1
+            to_return.append(card1)
+            for delta in self.p2Card2.deltas:
+                card2[2+delta[0]][2+delta[1]] = 1
+            to_return.append(card2)
+
+            for delta in self.p1Card1.deltas:
+                card_op1[2-delta[0]][2-delta[1]] = 1
+            to_return.append(card_op1)
+            for delta in self.p1Card2.deltas:
+                card_op2[2-delta[0]][2-delta[1]] = 1
+            to_return.append(card_op2)
+
+            for delta in self.midCard.deltas:
+                card_midcard[2+delta[0]][2+delta[1]] = 1
+            to_return.append(card_midcard)
+
+            print("Board:", self.board)
+            print("Observation", board_player1)
+
+        to_return.append(board_to_play)
+
         return numpy.array(to_return)
 
     def legal_actions(self):
@@ -451,6 +516,28 @@ class Onitama:
 
     def action_to_human_input(self, action):
         return decode_action(action)
+    
+    def generate_william_game(self):
+        will_board = numpy.zeros((self.board_size, self.board_size), dtype="int32")
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                will_board[i][j] = - self.board[i][j]
+        return WilliamGame(
+            red_cards = [self.p1Card1.name.lower(), self.p1Card2.name.lower()],
+            blue_cards = [self.p2Card1.name.lower(), self.p2Card2.name.lower()],
+            neutral_card = self.midCard.name.lower(),
+            board = will_board,
+            starting_player = -self.player
+        )
+    def expert_action(self):
+        self.minimax_ai.game = self.generate_william_game()
+        ai_move = self.minimax_ai.decide_move()
+        blue_cards = [self.p2Card1.name.lower(), self.p2Card2.name.lower()]
+        
+        print(blue_cards, "looking for", ai_move.card)
+        card = blue_cards.index(ai_move.card)
+        print((ai_move.start.y, ai_move.start.x), (ai_move.end.y, ai_move.end.x), ai_move.card)
+        return encode_action((ai_move.start.y, ai_move.start.x), (ai_move.end.y, ai_move.end.x), card)
 
 def printTwoCards(card1, card2, reverse = False):
     print(card1.name, card2.name)
