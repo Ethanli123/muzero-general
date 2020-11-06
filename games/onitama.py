@@ -19,7 +19,7 @@ class MuZeroConfig:
         self.observation_shape = (10, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         self.action_space = list(range(1250))  # Fixed list of all possible actions. You should only edit the length
         self.players = list(range(2))  # List of players. You should only edit the length
-        self.stacked_observations = 0  # Number of previous observations and previous actions to add to the current observation
+        self.stacked_observations = 8  # Number of previous observations and previous actions to add to the current observation
 
         # Evaluate
         self.muzero_player = 0  # Turn Muzero begins to play (0: MuZero plays first, 1: MuZero plays second)
@@ -29,7 +29,7 @@ class MuZeroConfig:
         self.num_workers = 2  # Number of simultaneous threads/workers self-playing to feed the replay buffer
         self.selfplay_on_gpu = True if torch.cuda.is_available() else False
         self.max_moves = 1000  # Maximum number of moves if game is not finished before
-        self.num_simulations = 200  # Number of future moves self-simulated
+        self.num_simulations = 50  # Number of future moves self-simulated
         self.discount = 1  # Chronological discount of the reward
         self.temperature_threshold = None  # Number of moves before dropping the temperature given by visit_softmax_temperature_fn to 0 (ie selecting the best action). If None, visit_softmax_temperature_fn is used every time
 
@@ -86,8 +86,8 @@ class MuZeroConfig:
 
         ### Replay Buffer
         self.replay_buffer_size = 1000  # Number of self-play games to keep in the replay buffer
-        self.num_unroll_steps = 42  # Number of game moves to keep for every batch element
-        self.td_steps = 42  # Number of steps in the future to take into account for calculating the target value
+        self.num_unroll_steps = 5  # Number of game moves to keep for every batch element
+        self.td_steps = 5  # Number of steps in the future to take into account for calculating the target value
         self.PER = True  # Prioritized Replay (See paper appendix Training), select in priority the elements in the replay buffer which are unexpected for the network
         self.PER_alpha = 0.5  # How much prioritization is used, 0 corresponding to the uniform case, paper suggests 1
 
@@ -387,9 +387,6 @@ class Onitama:
             for delta in self.midCard.deltas:
                 card_midcard[2+delta[0]][2+delta[1]] = 1
             to_return.append(card_midcard)
-
-            print("Board:", self.board)
-            print("Observation", board_player1)
 
         to_return.append(board_to_play)
 
