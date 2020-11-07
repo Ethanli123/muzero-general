@@ -34,7 +34,8 @@ class MuZeroConfig:
         self.temperature_threshold = None  # Number of moves before dropping the temperature given by visit_softmax_temperature_fn to 0 (ie selecting the best action). If None, visit_softmax_temperature_fn is used every time
 
         # Root prior exploration noise
-        self.root_dirichlet_alpha = 0.3
+        #self.root_dirichlet_alpha = 0.3
+        self.root_dirichlet_alpha = 0.25
         self.root_exploration_fraction = 0.25
 
         # UCB formula
