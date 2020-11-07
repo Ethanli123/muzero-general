@@ -4,7 +4,7 @@ import random
 INF = 1000
 
 class OnitamaAI:
-    MAX_SEARCH_DEPTH = 4
+    MAX_SEARCH_DEPTH = 2
 
     def __init__(self, game, ai_player=-1):
         self.game = game

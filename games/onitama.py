@@ -27,7 +27,7 @@ class MuZeroConfig:
         
         ### Self-Play
         self.num_workers = 3  # Number of simultaneous threads/workers self-playing to feed the replay buffer
-        self.selfplay_on_gpu = False # True if torch.cuda.is_available() else False
+        self.selfplay_on_gpu = True if torch.cuda.is_available() else False
         self.max_moves = 200  # Maximum number of moves if game is not finished before
         self.num_simulations = 200  # Number of future moves self-simulated
         self.discount = 1  # Chronological discount of the reward
@@ -75,13 +75,13 @@ class MuZeroConfig:
         self.value_loss_weight = 0.25  # Scale the value loss to avoid overfitting of the value function, paper recommends 0.25 (See paper appendix Reanalyze)
         self.train_on_gpu = True if torch.cuda.is_available() else False  # Train on GPU if available
 
-        self.optimizer = "Adam"  # "Adam" or "SGD". Paper uses SGD
+        self.optimizer = "SGD"  # "Adam" or "SGD". Paper uses SGD
         self.weight_decay = 1e-4  # L2 weights regularization
-        self.momentum = 0.9  # Used only if optimizer is SGD
+        self.momentum = 0.8 # Used only if optimizer is SGD
 
         # Exponential learning rate schedule
-        self.lr_init = 0.002  # Initial learning rate
-        self.lr_decay_rate = 0.9  # Set it to 1 to use a constant learning rate
+        self.lr_init = 0.003 # Initial learning rate
+        self.lr_decay_rate = 0.8  # Set it to 1 to use a constant learning rate
         self.lr_decay_steps = 10000
 
         ### Replay Buffer
