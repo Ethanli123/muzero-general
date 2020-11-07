@@ -17,7 +17,7 @@ class ReplayBuffer:
     def __init__(self, initial_checkpoint, initial_buffer, config):
         self.config = config
         self.buffer = copy.deepcopy(initial_buffer)
-        self.num_played_games = initial_checkpoint["num_played_games"]
+        self.num_played_games = max(initial_checkpoint["num_played_games"], len(self.buffer))
         self.num_played_steps = initial_checkpoint["num_played_steps"]
         self.total_samples = sum(
             [len(game_history.root_values) for game_history in self.buffer.values()]

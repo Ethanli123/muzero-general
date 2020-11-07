@@ -531,7 +531,6 @@ class Onitama:
         ai_move = self.minimax_ai.decide_move()
         blue_cards = [self.p2Card1.name.lower(), self.p2Card2.name.lower()]
         
-        print(blue_cards, "looking for", ai_move.card)
         card = blue_cards.index(ai_move.card)
         print((ai_move.start.y, ai_move.start.x), (ai_move.end.y, ai_move.end.x), ai_move.card)
         return encode_action((ai_move.start.y, ai_move.start.x), (ai_move.end.y, ai_move.end.x), card)
